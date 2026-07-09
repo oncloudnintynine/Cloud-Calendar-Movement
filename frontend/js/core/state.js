@@ -13,10 +13,11 @@ let fuseAttendees = null;
 
 let tempTypicalEventTypes =[];
 let tempAcronyms = {};
-let adminKAHList =[];
 let customKahGroups =[];
 let tempMenuOrder =[];
 let tempAdminSectionsOrder =[];
+let tempAdminContactsSectionsOrder =[];
+let tempDashboardDeptOrder =[];
 let eventAttendees =[]; 
 let isInfoAll = false;
 
@@ -51,11 +52,13 @@ const TAB_NAMES = {
 'submit-leave': 'Add Leave/MC/OIL (Classic)',
 'submit-event': 'Add Event (Classic)',
 'submit-combined': 'Add Event / Leave',
-'admin': 'Admin Settings',
+'admin': 'General Settings',
+'admin-contacts': 'Contacts & Users Management',
 'kah-management': 'KAH Management',
 'admin-structure': 'Organisational Structure',
 'admin-event-templates': 'Event Types & Templates',
-'admin-acronyms': 'Acronyms / Shortforms'
+'admin-acronyms': 'Acronyms / Shortforms',
+'admin-gcal-access': 'Google Calendar Access Rights'
 };
 
 const DEFAULT_MENU =['dashboard', 'parade-state', 'my-leaves', 'submit-combined'];
