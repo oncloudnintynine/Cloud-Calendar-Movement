@@ -1,5 +1,5 @@
 // ==========================================
-// Code.js - Main Router & DB Setup
+// Code.js - Main Router & DB Setup 
 // ==========================================
 
 function putCachedData(key, data, expirationInSeconds) {
@@ -44,15 +44,106 @@ var cache = CacheService.getScriptCache();
 var metaStr = cache.get(key);
 if (metaStr) {
 try {
-  var meta = JSON.parse(metaStr);
-  var chunks = meta.chunks;
-  for (var i = 0; i < chunks; i++) {
-    cache.remove(key + "_" + i);
-  }
+ var meta = JSON.parse(metaStr);
+ var chunks = meta.chunks;
+ for (var i = 0; i < chunks; i++) {
+   cache.remove(key + "_" + i);
+ }
 } catch(e){}
 }
 cache.remove(key);
 } catch (e) {}
+}
+
+function syncExternalCalendarsBackground() {
+syncExternalCalendars();
+}
+
+function ensureGcalSyncTrigger() {
+try {
+var triggers = ScriptApp.getProjectTriggers();
+var exists = false;
+for (var i = 0; i < triggers.length; i++) {
+if (triggers[i].getHandlerFunction() === 'syncExternalCalendarsBackground') {
+ exists = true;
+ break;
+}
+}
+if (!exists) {
+ScriptApp.newTrigger('syncExternalCalendarsBackground')
+ .timeBased()
+ .everyMinutes(15)
+ .create();
+}
+} catch(e) {
+console.error("Failed to create trigger: " + e.message);
+}
+}
+
+function syncExternalCalendars() {
+var props = PropertiesService.getScriptProperties();
+var gcalSyncCalendars = JSON.parse(props.getProperty('gcalSyncCalendars') || "[]");
+var result = [];
+
+if (gcalSyncCalendars.length > 0) {
+var todayStart = new Date();
+todayStart.setHours(0,0,0,0);
+var futureDate = new Date(todayStart.getTime() + (365 * 24 * 60 * 60 * 1000));
+var pastDate = new Date(todayStart.getTime() - (14 * 24 * 60 * 60 * 1000));
+
+gcalSyncCalendars.forEach(function(calName) {
+try {
+  var extCals = CalendarApp.getCalendarsByName(calName);
+  if (extCals.length > 0) {
+      var syncCal = extCals[0];
+      var syncCalId = syncCal.getId();
+      var extEvents = syncCal.getEvents(pastDate, futureDate);
+      
+      extEvents.forEach(function(extEvt) {
+          var evtId = extEvt.getId();
+          var isAllDay = extEvt.isAllDayEvent();
+          var sDate = extEvt.getStartTime();
+          var eDate = extEvt.getEndTime();
+          
+          // Fix for Google Apps Script returning midnight of the next day for 1-day all-day events
+          if (isAllDay) {
+              // Subtract 12 hours to safely land on the exact correct date regardless of SGT/UTC timezone conversions
+              eDate = new Date(eDate.getTime() - (12 * 60 * 60 * 1000));
+          }
+          
+          result.push({
+              ID: 'EXT_' + syncCalId + '|' + evtId,
+              Timestamp: extEvt.getDateCreated() ? extEvt.getDateCreated().toISOString() : new Date().toISOString(),
+              Phone: 'EXTERNAL',
+              Name: extEvt.getTitle() || '(No Title)',
+              Department: calName,
+              LeaveType: 'External Event',
+              StartDate: sDate.toISOString(),
+              EndDate: eDate.toISOString(),
+              HalfDay: 'NONE',
+              CoveringPerson: '',
+              Country: '',
+              State: '',
+              Remarks: extEvt.getDescription() || '',
+              Status: 'External (GCal)',
+              EventIDs: syncCalId + '|' + evtId,
+              Location: extEvt.getLocation() || '',
+              Attendees: '[]',
+              InfoAll: 'FALSE',
+              IsAllDay: isAllDay ? 'TRUE' : 'FALSE',
+              UntilDate: '',
+              LocationDetails: '',
+              _isExternal: true
+          });
+      });
+  }
+} catch(errSync) {
+  console.error("Error syncing specific external calendar", errSync);
+}
+});
+}
+putCachedData("external_gcal_events_cache", result, 21600); // Pre-computed JSON payload cached for 6 hours
+return result;
 }
 
 function INITIAL_SETUP() {
@@ -72,9 +163,10 @@ if (!props.getProperty('approvingAuthority')) props.setProperty('approvingAuthor
 if (!props.getProperty('menuOrder')) props.setProperty('menuOrder', JSON.stringify(['dashboard', 'parade-state', 'my-leaves', 'submit-combined']));
 if (!props.getProperty('landingPage')) props.setProperty('landingPage', 'dashboard');
 if (!props.getProperty('dashboardDeptOrder')) props.setProperty('dashboardDeptOrder', JSON.stringify([]));
-if (!props.getProperty('adminSectionsOrder')) props.setProperty('adminSectionsOrder', JSON.stringify(['landing-page', 'app-mode', 'dashboard-filter-order', 'admin-pass', 'user-keyword', 'external-booking', 'menu-order']));
+if (!props.getProperty('adminSectionsOrder')) props.setProperty('adminSectionsOrder', JSON.stringify(['landing-page', 'app-mode', 'dashboard-filter-order', 'admin-pass', 'user-keyword', 'external-booking', 'gcal-sync', 'menu-order']));
 if (!props.getProperty('adminContactsSectionsOrder')) props.setProperty('adminContactsSectionsOrder', JSON.stringify(['contact-format', 'register-user', 'manage-users']));
 if (!props.getProperty('externalToken')) props.setProperty('externalToken', Utilities.getUuid());
+if (!props.getProperty('gcalSyncCalendars')) props.setProperty('gcalSyncCalendars', JSON.stringify([]));
 
 var typicalEventTypes = props.getProperty('typicalEventTypes');
 if (!typicalEventTypes) {
@@ -95,18 +187,18 @@ if (t.defaultLoc === 'Office') { t.defaultLoc = 'In Camp'; updated = true; }
 if (t.defaultLoc === 'Others') { t.defaultLoc = 'Out of Camp'; updated = true; }
 if (!t.fields) {
 t.fields = {
-  location: {show: t.isEvent, req: t.isEvent},
-  locationDetails: {show: t.isEvent, req: false},
-  attendees: {show: t.isEvent || t.name === 'Official Trip', req: false},
-  remarks: {show: true, req: t.name==='Generic', label: t.name==='Generic'?'Meeting Description':'Remarks'}
+ location: {show: t.isEvent, req: t.isEvent},
+ locationDetails: {show: t.isEvent, req: false},
+ attendees: {show: t.isEvent || t.name === 'Official Trip', req: false},
+ remarks: {show: true, req: t.name==='Generic', label: t.name==='Generic'?'Meeting Description':'Remarks'}
 };
 updated = true;
 }
 if (!t.fieldOrder) {
 if (t.name === 'Official Trip' || t.name === 'Overseas Leave') {
-  t.fieldOrder = ['overseas', 'time', 'remarks', 'attendees', 'location', 'repeat'];
+ t.fieldOrder = ['overseas', 'time', 'remarks', 'attendees', 'location', 'repeat'];
 } else {
-  t.fieldOrder = ['time', 'location', 'attendees', 'remarks', 'repeat', 'overseas'];
+ t.fieldOrder = ['time', 'location', 'attendees', 'remarks', 'repeat', 'overseas'];
 }
 updated = true;
 }
@@ -152,6 +244,8 @@ try {
 var cmr = CalendarApp.getCalendarsByName("Cloud Meeting Room");
 if (cmr.length === 0) CalendarApp.createCalendar("Cloud Meeting Room");
 } catch(e) {}
+
+try { ensureGcalSyncTrigger(); } catch(e) {}
 }
 
 function verifySchema(sheet) {
@@ -219,17 +313,17 @@ var phone = (person.phoneNumbers && person.phoneNumbers.length > 0) ? person.pho
 if (phone && person.names && person.names.length > 0) {
 var name = extractName(person.names[0].displayName, format);
 if (person.memberships) {
- var depts = [];
- person.memberships.forEach(function(m) {
-     if (m.contactGroupMembership && m.contactGroupMembership.contactGroupResourceName) {
-         var gName = cg.groupMap[m.contactGroupMembership.contactGroupResourceName];
-         if (gName) depts.push(gName);
-     }
- });
- if (depts.length > 0) {
-     var deptsStr = depts.join(',');
-     allContacts.push({ name: name, phone: phone, dept: deptsStr });
- }
+var depts = [];
+person.memberships.forEach(function(m) {
+    if (m.contactGroupMembership && m.contactGroupMembership.contactGroupResourceName) {
+        var gName = cg.groupMap[m.contactGroupMembership.contactGroupResourceName];
+        if (gName) depts.push(gName);
+    }
+});
+if (depts.length > 0) {
+    var deptsStr = depts.join(',');
+    allContacts.push({ name: name, phone: phone, dept: deptsStr });
+}
 }
 }
 });
@@ -265,11 +359,11 @@ var lock = LockService.getScriptLock();
 var payload = JSON.parse(e.postData.contents);
 var action = payload.action;
 
-var needsLock =['submitLeave', 'editLeave', 'cancelLeave', 'registerUser', 'updateUser', 'deleteUser', 'updateUserUnits', 'saveSettings', 'renameUnit', 'forceSyncContacts', 'backfillCustomCalendar', 'addCalendarAcl', 'removeCalendarAcl', 'updateCalendarAcl', 'deleteCalendar', 'submitExternalEvent', 'regenerateExternalToken'].indexOf(action) !== -1;
+var needsLock =['submitLeave', 'editLeave', 'cancelLeave', 'registerUser', 'updateUser', 'deleteUser', 'updateUserUnits', 'saveSettings', 'renameUnit', 'forceSyncContacts', 'backfillCustomCalendar', 'addCalendarAcl', 'removeCalendarAcl', 'updateCalendarAcl', 'deleteCalendar', 'submitExternalEvent', 'regenerateExternalToken', 'forceSyncExternalCals'].indexOf(action) !== -1;
 if (needsLock) {
 var lockSuccess = lock.tryLock(28000); 
 if (!lockSuccess) {
-  return ContentService.createTextOutput(JSON.stringify({ success: false, error: "System busy processing high volume of requests. Please wait a moment and try again." })).setMimeType(ContentService.MimeType.JSON);
+ return ContentService.createTextOutput(JSON.stringify({ success: false, error: "System busy processing high volume of requests. Please wait a moment and try again." })).setMimeType(ContentService.MimeType.JSON);
 }
 }
 
@@ -278,7 +372,7 @@ var data = payload.data || {};
 var credentials = payload.credentials || {};
 var responseData = {};
 
-var secureActions =['getSettings', 'saveSettings', 'submitLeave', 'editLeave', 'cancelLeave', 'getLeaves', 'updateUser', 'deleteUser', 'updateUserUnits', 'renameUnit', 'forceSyncContacts', 'deleteCalendar', 'backfillCustomCalendar', 'getInitialData', 'getCalendarAcls', 'addCalendarAcl', 'removeCalendarAcl', 'updateCalendarAcl', 'regenerateExternalToken'];
+var secureActions =['getSettings', 'saveSettings', 'submitLeave', 'editLeave', 'cancelLeave', 'getLeaves', 'updateUser', 'deleteUser', 'updateUserUnits', 'renameUnit', 'forceSyncContacts', 'deleteCalendar', 'backfillCustomCalendar', 'getInitialData', 'getCalendarAcls', 'addCalendarAcl', 'removeCalendarAcl', 'updateCalendarAcl', 'regenerateExternalToken', 'forceSyncExternalCals'];
 if (secureActions.indexOf(action) !== -1) {
 if (!credentials.pass && !data.adminPass) throw new Error("Unauthorized: Missing credentials");
 
@@ -315,6 +409,11 @@ else if (action === 'addCalendarAcl') responseData = addCalendarAcl(data);
 else if (action === 'removeCalendarAcl') responseData = removeCalendarAcl(data);
 else if (action === 'updateCalendarAcl') responseData = updateCalendarAcl(data);
 else if (action === 'regenerateExternalToken') responseData = regenerateExternalToken(data);
+else if (action === 'forceSyncExternalCals') {
+syncExternalCalendars();
+removeCachedData("leaves_cache");
+responseData = { success: true };
+}
 else if (action === 'getInitialData') responseData = { settings: getSettings(data), leaves: getLeaves(data) };
 
 return ContentService.createTextOutput(JSON.stringify({ success: true, data: responseData })).setMimeType(ContentService.MimeType.JSON);
