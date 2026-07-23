@@ -33,7 +33,7 @@ darkmuted: '#9ca3af'
 }
 </script>
 </head>
-<body class="bg-gray-50 text-gray-900 dark:bg-darkbase dark:text-darktext transition-colors duration-200 h-[100dvh] flex flex-col text-base overflow-hidden">
+<body class="bg-gray-50 text-gray-900 dark:bg-darkbase dark:text-darktext transition-colors duration-200 h-[100dvh] flex flex-col text-base overflow-hidden logged-out">
 
 <div id="loader" class="fixed inset-0 bg-white/90 dark:bg-darkbase/90 backdrop-blur-sm z-[100] flex-col items-center justify-center hidden">
 <div class="spinner mb-4"></div><p class="font-bold text-xl text-blue-600 dark:text-blue-400 tracking-wide">Processing...</p>
@@ -61,7 +61,16 @@ darkmuted: '#9ca3af'
 <button onclick="switchTab('submit-leave')" id="menu-submit-leave" class="text-left px-4 py-3 rounded-xl font-semibold text-gray-700 dark:text-darktext hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 hidden text-base transition">Add Leave/MC (Classic)</button>
 <button onclick="switchTab('submit-event')" id="menu-submit-event" class="text-left px-4 py-3 rounded-xl font-semibold text-gray-700 dark:text-darktext hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 hidden text-base transition">Add Event (Classic)</button>
 
-<button onclick="window.downloadVCF(); closeMenu();" id="menu-save-directory" class="text-left px-4 py-3 rounded-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-base transition flex items-center justify-between mt-2 border border-indigo-100 dark:border-indigo-900/30">Save Contacts <span><svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg></span></button>
+<div class="flex space-x-2 mt-2">
+<button onclick="window.downloadVCF(); closeMenu();" id="menu-save-directory" class="hidden w-1/2 text-center px-2 py-3 rounded-xl font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-sm transition flex flex-col items-center justify-center border border-indigo-100 dark:border-indigo-900/30">
+<span><svg class="w-5 h-5 shrink-0 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg></span>
+Save Contacts
+</button>
+<button onclick="window.forceSyncExternalCals(false); closeMenu();" id="menu-sync-gcal" class="hidden w-1/2 text-center px-2 py-3 rounded-xl font-semibold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 text-sm transition flex flex-col items-center justify-center border border-cyan-100 dark:border-cyan-900/30">
+<span><svg class="w-5 h-5 shrink-0 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></span>
+Sync GCal (Pull)
+</button>
+</div>
 
 <div id="menu-admin-group" class="hidden border-t border-gray-200 dark:border-darkborder mt-3 pt-3 space-y-1">
 <button onclick="switchTab('admin')" id="menu-admin" class="w-full text-left px-4 py-3 rounded-xl font-semibold text-gray-700 dark:text-darktext hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 text-base transition">General Settings</button>
@@ -110,7 +119,7 @@ darkmuted: '#9ca3af'
 <div class="flex items-center justify-end space-x-1.5 md:space-x-3 flex-1 min-w-0">
 <span id="nav-user-name" class="font-bold hidden lg:block mr-2 text-sm text-gray-700 dark:text-gray-300 truncate max-w-[150px]"></span>
 <button onclick="toggleTheme()" class="text-xl md:text-2xl p-1 transition shrink-0" title="Toggle Theme">🌗</button>
-<button onclick="animateAndUpdate(this)" class="p-1.5 text-gray-500 dark:text-darkmuted hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition shrink-0" title="Sync / Refresh">
+<button id="nav-refresh-btn" onclick="animateAndUpdate(this)" class="p-1.5 text-gray-500 dark:text-darkmuted hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition shrink-0" title="Sync / Refresh">
  <svg class="w-5 h-5 md:w-[22px] md:h-[22px] transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
 </button>
 <button id="logout-btn" onclick="logout()" class="p-1.5 text-gray-500 dark:text-darkmuted hover:text-red-600 dark:hover:text-red-400 rounded-full transition hidden shrink-0" title="Logout">
@@ -148,6 +157,7 @@ darkmuted: '#9ca3af'
 <div id="register-alert" class="hidden bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 text-base p-4 rounded-xl mb-6 text-center font-semibold"></div>
 <div class="space-y-4 mb-8">
 <div><label class="block font-bold mb-2 text-gray-700 dark:text-gray-300">Full Name</label><input type="text" id="reg-name" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput focus:bg-white dark:focus:bg-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition text-lg font-medium"></div>
+<div><label class="block font-bold mb-2 text-gray-700 dark:text-gray-300">Personal Email</label><input type="email" id="reg-email" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput focus:bg-white dark:focus:bg-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition text-lg font-medium"></div>
 <div><label class="block font-bold mb-2 text-gray-700 dark:text-gray-300">Mobile No</label><input type="tel" id="reg-mobile" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput focus:bg-white dark:focus:bg-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition text-lg font-medium"></div>
 <div><label class="block font-bold mb-2 text-gray-700 dark:text-gray-300">Unit</label><select id="reg-unit" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput focus:bg-white dark:focus:bg-black outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition cursor-pointer text-lg font-medium"><option value="" disabled selected>Select...</option></select></div>
 <div><label class="block font-bold mb-2 text-gray-700 dark:text-gray-300">Birthday</label><button type="button" id="btn-register-birthday" onclick="openPicker('date', 'register', 'birthday')" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput hover:bg-white dark:hover:bg-black text-left outline-none font-medium transition text-gray-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 text-lg">Select...</button></div>
@@ -696,11 +706,6 @@ darkmuted: '#9ca3af'
 </div>
 <p class="text-xs text-gray-500 mb-4 leading-snug font-medium">Select which calendars should actively pull events created externally via the Google Calendar app into Cloudy.</p>
 
-<button type="button" onclick="forceSyncExternalCals()" class="mb-4 w-full bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-800 font-bold py-2.5 rounded-xl transition shadow-sm text-sm flex justify-center items-center">
-<svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-Force Sync Now
-</button>
-
 <div id="gcal-sync-list" class="space-y-1"></div>
 </div>
 
@@ -746,6 +751,10 @@ Force Sync Now
 <input type="text" id="admin-reg-name" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition text-base font-medium" placeholder="e.g. Tan Ah Kow">
 </div>
 <div>
+<label class="block font-bold mb-2 text-sm text-gray-700 dark:text-gray-300">Personal Email</label>
+<input type="email" id="admin-reg-email" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition text-base font-medium" placeholder="e.g. user@gmail.com">
+</div>
+<div>
 <label class="block font-bold mb-2 text-sm text-gray-700 dark:text-gray-300">Mobile No</label>
 <input type="tel" id="admin-reg-mobile" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl py-3 px-4 bg-gray-50 dark:bg-darkinput outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition text-base font-medium" placeholder="e.g. 96745345">
 </div>
@@ -784,6 +793,10 @@ Force Sync Now
 <div>
 <label class="block font-bold mb-2 text-sm text-gray-700 dark:text-gray-300">Full Name</label>
 <input type="text" id="edit-user-name" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-black text-base font-medium py-3 px-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition">
+</div>
+<div>
+<label class="block font-bold mb-2 text-sm text-gray-700 dark:text-gray-300">Personal Email</label>
+<input type="email" id="edit-user-email" class="w-full border-2 border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-black text-base font-medium py-3 px-4 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800/40 transition">
 </div>
 <div>
 <label class="block font-bold mb-2 text-sm text-gray-700 dark:text-gray-300">Mobile No</label>
@@ -1112,17 +1125,17 @@ Force Sync Now
 </div>
 </div>
 
-<script src="backend/config.js?v=126"></script>
-<script src="frontend/js/core/state.js?v=126"></script>
-<script src="frontend/js/core/api.js?v=126"></script>
-<script src="frontend/js/core/auth.js?v=126"></script>
-<script src="frontend/js/ui/ui.js?v=126"></script>
-<script src="frontend/js/features/calendar.js?v=126"></script>
-<script src="frontend/js/features/parade.js?v=126"></script>
-<script src="frontend/js/ui/forms.js?v=126"></script>
-<script src="frontend/js/ui/picker.js?v=126"></script>
-<script src="frontend/js/admin/admin.js?v=126"></script>
-<script src="frontend/js/admin/structure.js?v=126"></script> 
-<script src="frontend/js/core/app.js?v=126"></script>
+<script src="backend/config.js?v=129"></script>
+<script src="frontend/js/core/state.js?v=129"></script>
+<script src="frontend/js/core/api.js?v=129"></script>
+<script src="frontend/js/core/auth.js?v=129"></script>
+<script src="frontend/js/ui/ui.js?v=129"></script>
+<script src="frontend/js/features/calendar.js?v=129"></script>
+<script src="frontend/js/features/parade.js?v=129"></script>
+<script src="frontend/js/ui/forms.js?v=129"></script>
+<script src="frontend/js/ui/picker.js?v=129"></script>
+<script src="frontend/js/admin/admin.js?v=129"></script>
+<script src="frontend/js/admin/structure.js?v=129"></script> 
+<script src="frontend/js/core/app.js?v=129"></script>
 </body>
 </html>

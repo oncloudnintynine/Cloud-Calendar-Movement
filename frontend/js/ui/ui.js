@@ -183,6 +183,10 @@ checkAndUpdate('btn-manage-user-birthday', appData.manageUser.birthdaySelected ?
 }
 
 window.downloadVCF = function() {
+if (!window.user || window.externalToken) {
+alert("You must be logged in to download contacts.");
+return;
+}
 if (!companyContacts || companyContacts.length === 0) {
 alert("Directory is empty or still loading.");
 return;
@@ -244,6 +248,14 @@ if (icon) icon.classList.remove('animate-spin');
 }
 
 async function updateApp() {
+if (!window.isOffline && typeof user !== 'undefined' && user && user.pass) {
+try { 
+await apiCall('forceSyncExternalCals'); 
+} catch(e) { 
+console.warn("Background GCal sync skipped", e); 
+}
+}
+
 if ('serviceWorker' in navigator) {
 try { 
 const regs = await navigator.serviceWorker.getRegistrations(); 

@@ -10,6 +10,13 @@ document.getElementById('app-view').classList.add('hidden-view');
 document.getElementById('logout-btn').classList.add('hidden');
 document.getElementById('menu-btn').classList.add('hidden');
 document.getElementById('active-tab-title').classList.add('hidden');
+document.body.classList.add('logged-out');
+
+const navUserName = document.getElementById('nav-user-name');
+if (navUserName) navUserName.classList.add('hidden-view');
+
+const navRefreshBtn = document.getElementById('nav-refresh-btn');
+if (navRefreshBtn) navRefreshBtn.classList.add('hidden-view');
 
 const controlsWrapper = document.getElementById('dash-controls-wrapper');
 if (controlsWrapper) {
@@ -83,11 +90,12 @@ const prefix = context === 'admin' ? 'admin-reg-' : 'reg-';
 const ctxObj = context === 'admin' ? 'adminRegister' : 'register';
 
 const name = document.getElementById(prefix + 'name').value.trim();
+const email = document.getElementById(prefix + 'email').value.trim();
 const mobile = document.getElementById(prefix + 'mobile').value.trim();
 const unit = document.getElementById(prefix + 'unit').value;
 
-if (!name || !mobile || !unit) {
- alertError(context === 'admin' ? 'admin-alert' : 'register-alert', 'Please fill in all fields including the Unit.');
+if (!name || !email || !mobile || !unit) {
+ alertError(context === 'admin' ? 'admin-alert' : 'register-alert', 'Please fill in all fields including the Unit and Email.');
  return;
 }
 
@@ -101,11 +109,12 @@ const bdayStr = `${bday.getFullYear()}-${String(bday.getMonth()+1).padStart(2,'0
 
 showLoader(true);
 try {
- await apiCall('registerUser', { fullName: name, mobile: mobile, unit: unit, birthday: bdayStr });
+ await apiCall('registerUser', { fullName: name, email: email, mobile: mobile, unit: unit, birthday: bdayStr });
  alert('User successfully registered!');
  if (context === 'self') toggleRegisterView(false);
  
  document.getElementById(prefix + 'name').value = '';
+ document.getElementById(prefix + 'email').value = '';
  document.getElementById(prefix + 'mobile').value = '';
  document.getElementById(prefix + 'unit').value = '';
  initDates(); 

@@ -128,6 +128,9 @@ const infoAllBtn = document.getElementById('form-combined-infoall-btn');
 if (infoAllBtn) infoAllBtn.classList.add('hidden-view');
 
 // Override external wrapper appearance
+const saveContactsBtn = document.getElementById('menu-save-directory');
+if (saveContactsBtn) saveContactsBtn.classList.add('hidden-view');
+
 const formWrapper = document.getElementById('view-submit-combined');
 if (formWrapper) {
 formWrapper.classList.add('pt-4', 'md:pt-10');
@@ -149,11 +152,28 @@ showLoader(false);
 
 async function showApp() {
 showLoader(true);
+document.body.classList.remove('logged-out');
 document.getElementById('login-view').classList.add('hidden-view');
 document.getElementById('app-view').classList.remove('hidden-view');
 document.getElementById('logout-btn').classList.remove('hidden');
 document.getElementById('menu-btn').classList.remove('hidden');
 document.getElementById('active-tab-title').classList.remove('hidden');
+
+const navUserName = document.getElementById('nav-user-name');
+if (navUserName) navUserName.classList.remove('hidden-view');
+
+const navRefreshBtn = document.getElementById('nav-refresh-btn');
+if (navRefreshBtn) navRefreshBtn.classList.remove('hidden-view');
+
+const saveContactsBtn = document.getElementById('menu-save-directory');
+if (saveContactsBtn) {
+  saveContactsBtn.classList.remove('hidden-view');
+  saveContactsBtn.classList.remove('hidden');
+}
+const syncGcalBtn = document.getElementById('menu-sync-gcal');
+if (syncGcalBtn) {
+  syncGcalBtn.classList.remove('hidden');
+}
 
 user.departments = user.departments ||[]; // Safety fallback for Admins
 
@@ -220,7 +240,7 @@ c.dept.split(',').forEach(d => allUnits.add(d.trim().toUpperCase()));
 companyStructure = Array.from(allUnits);
 
 // Universal Meeting Room Injection
-allUnits.add('Cloud Meeting Room');
+// Removed as per request
 
 // Dedicated Custom KAH Group Calendars Injection
 if (window.appCustomKahGroups) {
@@ -239,7 +259,6 @@ if (idxB !== -1) return 1;
 
 if (a.toUpperCase() === 'HQ') return -1;
 if (b.toUpperCase() === 'HQ') return 1;
-if (a === 'Cloud Meeting Room') return -1; 
 return a.localeCompare(b);
 });
 
@@ -251,7 +270,7 @@ deptHtml += uniqueDepts.map(d => `<option value="${d}">${d}</option>`).join('');
 deptNav.innerHTML = deptHtml;
 }
 
-const uniqueRegDepts = Array.from(allUnits).filter(u => u !== 'Cloud Meeting Room' && !window.appCustomKahGroups.some(g => g.calendarName === u)).sort((a, b) => {
+const uniqueRegDepts = Array.from(allUnits).filter(u => !window.appCustomKahGroups.some(g => g.calendarName === u)).sort((a, b) => {
 if (a.toUpperCase() === 'HQ') return -1;
 if (b.toUpperCase() === 'HQ') return 1;
 return a.localeCompare(b);

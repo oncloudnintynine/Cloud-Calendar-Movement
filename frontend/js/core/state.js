@@ -5,6 +5,7 @@
 let user = JSON.parse(localStorage.getItem('user')) || null;
 let allLeaves =[];
 let currentEditId = null;
+let lastLocalChange = 0; // Concurrency timestamp tracker
 
 let companyContacts =[];
 let validContactNames =[];
@@ -46,8 +47,8 @@ let myMonth = new Date(myDate.getFullYear(), myDate.getMonth(), 1);
 const mos =['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const TAB_NAMES = {
-'dashboard': 'Dashboard',
-'parade-state': 'Parade State',
+'index': 'Dashboard',
+'parade': 'Parade State',
 'my-leaves': 'My Calendar',
 'submit-leave': 'Add Leave/MC/OIL (Classic)',
 'submit-event': 'Add Event (Classic)',
@@ -62,3 +63,13 @@ const TAB_NAMES = {
 };
 
 const DEFAULT_MENU =['dashboard', 'parade-state', 'my-leaves', 'submit-combined'];
+
+// --- DEBOUNCER HELPER FOR SEARCH ---
+function debounce(func, wait) {
+let timeout;
+return function(...args) {
+const context = this;
+clearTimeout(timeout);
+timeout = setTimeout(() => func.apply(context, args), wait);
+};
+}
